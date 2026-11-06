@@ -13,8 +13,6 @@ function getSupabaseClient() {
   return createClient(url, key);
 }
 
-// Отключаем статическую сборку для этого роута (он всегда динамический)
-export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
