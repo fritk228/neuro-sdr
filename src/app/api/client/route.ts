@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Функция, которая создает клиента только тогда, когда он реально нужен
+function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error('Missing Supabase URL or Service Role Key');
+  }
+
+  return createClient(url, key);
+}
+
+// Отключаем статическую сборку для этого роута (он всегда динамический)
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
@@ -13,6 +23,8 @@ export async function POST(req: Request) {
     if (!clientId) {
       return NextResponse.json({ error: 'Нет clientId' }, { status: 400 });
     }
+
+    const supabase = getSupabaseClient(); // <-- Создаем клиент здесь
 
     const { error } = await supabase
       .from('clients')
@@ -26,6 +38,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, message: 'Настройки сохранены' });
   } catch (error: any) {
+    console.error('Error saving settings:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
